@@ -32,16 +32,37 @@ from django.contrib.auth.hashers import make_password
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 
 
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import redirect
 
+def admin_required(view_func):
+    actual_decorator = user_passes_test(
+        lambda u: u.is_authenticated and u.is_staff,
+        login_url='/login/',
+        redirect_field_name=None
+    )
+    return actual_decorator(view_func)
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
+
+class MiVistaProtegida(LoginRequiredMixin, View):
+    login_url = '/login/'
+    redirect_field_name = 'redirect_to'
+    
+    def get(self, request, *args, **kwargs):
+        # Tu lógica de vista
+        pass
 
 # Create your views here.
 def llamadacita(request):
     return render(request, "llamadaCitas.html")  
 
 def index(request): 
-    imagenes_galeria = ImagenGaleria.objects.filter(activa=True).order_by('orden')[:9]
+    imagenes_galeria = ImagenGaleria.objects.filter(activa=True).order_by('orden')[:12]
     return render(request, "1. Index.html", {'imagenes_galeria': imagenes_galeria})
 
 def servicios(request):
@@ -293,16 +314,13 @@ def reporte_citas_pdf(request):
     p.save()
     return response
 
-# views.py
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib import messages
 from .forms import LoginForm
 
-from django.http import JsonResponse
-
 def login(request):
-    # Verificar si viene de un cambio de contraseña exitoso
-    password_changed = request.GET.get('password_changed') == '1'
+    next_url = request.GET.get('next', 'gestioncitas')
     
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
@@ -313,30 +331,27 @@ def login(request):
             
             if user is not None:
                 auth_login(request, user)
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': True,
-                        'redirect_url': reverse('gestioncitas')
-                    })
-                return redirect('gestioncitas')
+                
+                # Redirección basada en el tipo de usuario
+                if user.is_staff:
+                    return redirect(next_url if next_url else 'gestioncitas')
+                else:
+                    return redirect('index')
             else:
-                form.add_error(None, "Documento o contraseña incorrectos")
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            errors = form.errors.as_json()
-            return JsonResponse({
-                'success': False,
-                'errors': errors,
-                'message': 'Error de autenticación'
-            }, status=400)
+                messages.error(request, "Documento o contraseña incorrectos")
+        else:
+            messages.error(request, "Por favor corrige los errores del formulario")
     else:
         form = LoginForm()
     
-    context = {
+    return render(request, "4. login.html", {
         'form': form,
-        'password_changed': password_changed  # Pasar este contexto a la plantilla
-    }
-    return render(request, "4. login.html", context)
+        'next': next_url
+    })
+
+def logout(request):
+    auth_logout(request)
+    return redirect('index')
 
 def logout(request):
     auth_logout(request)
@@ -511,8 +526,67 @@ def ModificarS(request):
     servicios = Servicio.objects.all().order_by('orden')
     return render(request, "modificarservicios.html", {'servicios': servicios})
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+
+@login_required(login_url='/login/')
+@admin_required
 def usuarios(request):
-    return render(request, "GestionUsuarios.html")
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    try:
+        # Obtener parámetros de filtrado
+        filtros = {
+            'documento': request.GET.get('documento', ''),
+            'nombre': request.GET.get('nombre', ''),
+            'correo': request.GET.get('correo', ''),
+            'telefono': request.GET.get('telefono', ''),
+            'estado': request.GET.get('estado', '')
+        }
+        
+        # Filtrar administradores
+        administradores = Administrador.objects.all()
+        
+        if filtros['documento']:
+            administradores = administradores.filter(documento__icontains=filtros['documento'])
+        if filtros['nombre']:
+            administradores = administradores.filter(nombre_completo__icontains=filtros['nombre'])
+        if filtros['correo']:
+            administradores = administradores.filter(correo_electronico__icontains=filtros['correo'])
+        if filtros['telefono']:
+            administradores = administradores.filter(telefono__icontains=filtros['telefono'])
+        if filtros['estado']:
+            administradores = administradores.filter(is_active=(filtros['estado'].lower() == 'true'))
+        
+        administradores = administradores.order_by('nombre_completo')
+        
+        # Para solicitudes AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            data = {
+                'administradores': [
+                    {
+                        'documento': admin.documento,
+                        'nombre_completo': admin.nombre_completo,
+                        'correo_electronico': admin.correo_electronico,
+                        'telefono': admin.telefono,
+                        'is_active': admin.is_active
+                    }
+                    for admin in administradores
+                ]
+            }
+            return JsonResponse(data, encoder=DjangoJSONEncoder, safe=False)
+        
+        return render(request, "GestionUsuarios.html", {
+            'administradores': administradores,
+            'user': request.user
+        })
+        
+    except Exception as e:
+        print(f"Error en vista usuarios: {str(e)}")
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': str(e)}, status=500)
+        raise
 
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -592,47 +666,44 @@ def obtener_tip_actual(request):
             'imagen': ''
         })
 
-# --- Galería ---
     
-
-
 def gestion_galeria(request):
     imagenes = ImagenGaleria.objects.all().order_by('orden')
+    total_imagenes = ImagenGaleria.objects.count()
     
     if request.method == 'POST':
-        # Manejar toggle activa/inactiva
-        if 'toggle_activa' in request.POST:
-            imagen_id = request.POST['toggle_activa']
-            imagen = get_object_or_404(ImagenGaleria, id=imagen_id)
-            imagen.activa = not imagen.activa
-            imagen.save()
-            messages.success(request, f'Imagen {"mostrada" if imagen.activa else "ocultada"} correctamente')
+        imagen_id = request.POST.get('imagen_id')
+        
+        # Validar límite solo para nuevas imágenes (no ediciones)
+        if 'imagen' in request.FILES and not imagen_id and total_imagenes >= 12:
+            messages.error(request, "No se pueden agregar más imágenes. El límite es de 9.")
             return redirect('Galeria')
             
-        # Resto del código para manejar edición/creación...
-        imagen_id = request.POST.get('imagen_id')
         if imagen_id:
-            # Manejar edición de imagen existente
+            # Edición de imagen existente
             imagen = get_object_or_404(ImagenGaleria, id=imagen_id)
             form = ImagenGaleriaForm(request.POST, request.FILES, instance=imagen)
         else:
-            # Manejar creación de nueva imagen
+            # Creación de nueva imagen
             form = ImagenGaleriaForm(request.POST, request.FILES)
         
         if form.is_valid():
-            form.save()
+            imagen = form.save()
             action = 'actualizada' if imagen_id else 'agregada'
             messages.success(request, f'Imagen {action} correctamente')
             return redirect('Galeria')
         else:
-            messages.error(request, 'Por favor corrige los errores del formulario')
+            # Mostrar errores específicos del formulario
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = ImagenGaleriaForm()
         
     return render(request, '5. modificar-galeria.html', {
         'imagenes': imagenes,
         'form': form,
-        'total_imagenes': ImagenGaleria.objects.count()
+        'total_imagenes': total_imagenes
     })
 
 @csrf_exempt
@@ -856,12 +927,6 @@ def enviar_correo_cita(cliente, estado, cita=None):
     email = EmailMultiAlternatives(asunto, text_content, None, destinatario)
     email.attach_alternative(html_content, "text/html")
     email.send()
-
-def index(request):
-    imagenes_galeria = ImagenGaleria.objects.filter(activa=True).order_by('orden')[:9]
-    return render(request, "1. Index.html", {'imagenes_galeria': imagenes_galeria})
-
-
 
 def servicios(request):
     servicios = Servicio.objects.filter(activo=True).order_by('orden')

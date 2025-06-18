@@ -1,4 +1,10 @@
 {% load static %}
+{% if not request.user.is_authenticated %}
+  <script>
+    window.location.href = "{% url 'login' %}";
+  </script>
+{% else %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -59,7 +65,8 @@
 
     
     <!-- Contenido principal -->
-    <div class="md:ml-72 p-6 lg:p-8 min-h-screen">
+    <!-- Contenido principal -->
+<div class="md:ml-72 px-6 lg:px-8 py-6 min-h-screen">
     <nav class="flex ml-8 mb-9 w-full justify-start">
         <ol class="inline-flex items-center space-x-1 md:space-x-2">
             <li class="inline-flex items-center">
@@ -86,107 +93,113 @@
     
     <div class="mb-6">
         <!-- Contenedor para centrar el botón de filtrar -->
-    <div class="flex justify-center mb-6">
-        <button id="btnMostrarFiltros" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md transition-colors inline-flex items-center gap-2">
-            <i class="fas fa-filter"></i> 
-            <span>Filtrar</span>
-        </button>
-    </div>
+        <div class="flex justify-center mb-6">
+            <button id="btnMostrarFiltros" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md transition-colors inline-flex items-center gap-2">
+                <i class="fas fa-filter"></i> 
+                <span>Filtrar</span>
+            </button>
+        </div>
         
-        <div id="filtrosContainer" class="hidden bg-white p-4 lg:p-6 rounded-lg shadow-md mb-4 transition-all duration-300 ease-in-out">
+        <div id="filtrosContainer" class="hidden bg-white p-4 lg:p-6 rounded-lg shadow-md mb-4 mx-auto w-full max-w-6xl transition-all duration-300 ease-in-out">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
-                    <input type="text" id="filtroDocumento" placeholder="Buscar por documento..."
-                        class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                <!-- Filtro por documento -->
+                <div class="form-group">
+                    <label for="filtroDocumento" class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
+                    <input type="text" id="filtroDocumento" class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                    <input type="text" id="filtroNombre" placeholder="Buscar por nombre..."
-                        class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                
+                <!-- Filtro por nombre -->
+                <div class="form-group">
+                    <label for="filtroNombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input type="text" id="filtroNombre" class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Correo</label>
-                    <input type="text" id="filtroCorreo" placeholder="Buscar por correo..."
-                        class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                
+                <!-- Filtro por correo -->
+                <div class="form-group">
+                    <label for="filtroCorreo" class="block text-sm font-medium text-gray-700 mb-1">Correo</label>
+                    <input type="text" id="filtroCorreo" class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                    <input type="text" id="filtroTelefono" placeholder="Buscar por teléfono..."
-                        class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                
+                <!-- Filtro por teléfono -->
+                <div class="form-group">
+                    <label for="filtroTelefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="text" id="filtroTelefono" class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                    <select id="filtroEstado" class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                
+                <!-- Filtro por estado -->
+                <div class="form-group">
+                    <label for="filtroEstado" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <select id="filtroEstado" class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Todos</option>
                         <option value="true">Activo</option>
                         <option value="false">Inactivo</option>
                     </select>
                 </div>
-                <div class="flex items-end">
-                    <button id="btnLimpiarFiltros" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-2">
-                        <i class="fas fa-times"></i> 
-                        <span>Limpiar</span>
+                
+                <!-- Botón para limpiar filtros -->
+                <div class="form-group flex items-end">
+                    <button id="btnLimpiarFiltros" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors">
+                        Limpiar Filtros
                     </button>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden mx-auto max-w-6xl mt-6">
-    <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-center">
-            <thead>
-                <tr class="bg-gray-50">
-                    <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Documento</th>
-                    <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Nombre Completo</th>
-                    <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Correo Electrónico</th>
-                    <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Teléfono</th>
-                    <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Estado</th>
-                    <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tablaCuerpo">
-                {% for admin in administradores %}
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.documento }}</td>
-                    <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.nombre_completo }}</td>
-                    <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.correo_electronico }}</td>
-                    <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.telefono }}</td>
-                    <td class="px-4 py-6 border-b border-gray-100">
-                        {% if admin.is_active %}
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Activo</span>
-                        {% else %}
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inactivo</span>
-                        {% endif %}
-                    </td>
-                    <td class="border-b border-gray-100">
-                        <div class="flex flex-wrap justify-center gap-2">
-                            <button class="btn-editar bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors inline-flex items-center gap-1 text-sm" data-documento="{{ admin.documento }}">
-                                <i class="fas fa-edit"></i> 
-                                <span class="hidden sm:inline">Editar</span>
-                            </button>
-                            <button class="btn-eliminar bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors inline-flex items-center gap-1 text-sm" data-documento="{{ admin.documento }}">
-                                <i class="fas fa-trash-alt"></i> 
-                                <span class="hidden sm:inline">Eliminar</span>
-                            </button>
-                            <button class="toggle-estado bg-{{ admin.is_active|yesno:'yellow,green' }}-500 hover:bg-{{ admin.is_active|yesno:'yellow,green' }}-600 text-white px-3 py-1 rounded-md transition-colors inline-flex items-center gap-1 text-sm" data-documento="{{ admin.documento }}">
-                                <i class="fas fa-{{ admin.is_active|yesno:'ban,check' }}"></i> 
-                                <span class="hidden sm:inline">{{ admin.is_active|yesno:'Desactivar,Activar' }}</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">No hay usuarios registrados</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Contenedor de la tabla - Modificado -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mx-auto w-full max-w-6xl mt-6">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-center">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Documento</th>
+                        <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Nombre Completo</th>
+                        <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Correo Electrónico</th>
+                        <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Teléfono</th>
+                        <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Estado</th>
+                        <th class="px-4 py-6 text-sm font-bold text-gray-900 border-b border-gray-200">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaCuerpo">
+                    {% for admin in administradores %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.documento }}</td>
+                        <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.nombre_completo }}</td>
+                        <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.correo_electronico }}</td>
+                        <td class="px-4 py-6 text-lg border-b border-gray-100">{{ admin.telefono }}</td>
+                        <td class="px-4 py-6 border-b border-gray-100">
+                            {% if admin.is_active %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Activo</span>
+                            {% else %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="border-b border-gray-100">
+                            <div class="flex flex-wrap justify-center gap-2">
+                                <button class="btn-editar bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors inline-flex items-center gap-1 text-sm" data-documento="{{ admin.documento }}">
+                                    <i class="fas fa-edit"></i> 
+                                    <span class="hidden sm:inline">Editar</span>
+                                </button>
+                                <button class="btn-eliminar bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors inline-flex items-center gap-1 text-sm" data-documento="{{ admin.documento }}">
+                                    <i class="fas fa-trash-alt"></i> 
+                                    <span class="hidden sm:inline">Eliminar</span>
+                                </button>
+                                <button class="toggle-estado bg-{{ admin.is_active|yesno:'yellow,green' }}-500 hover:bg-{{ admin.is_active|yesno:'yellow,green' }}-600 text-white px-3 py-1 rounded-md transition-colors inline-flex items-center gap-1 text-sm" data-documento="{{ admin.documento }}">
+                                    <i class="fas fa-{{ admin.is_active|yesno:'ban,check' }}"></i> 
+                                    <span class="hidden sm:inline">{{ admin.is_active|yesno:'Desactivar,Activar' }}</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">No hay usuarios registrados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-
 
     <div class="mt-6 text-center">
         <button id="btnNuevoUsuario" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg shadow-md transition-colors inline-flex items-center gap-2">
@@ -250,12 +263,26 @@
                             <label for="inputPassword" class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
                             <div class="relative">
                                 <input type="password" name="password" id="inputPassword" required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                    class="w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    minlength="12">
                                 <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700" onclick="togglePassword('inputPassword')">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
                             <div id="passwordError" class="text-red-500 text-sm mt-1"></div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                La contraseña debe tener mínimo 12 caracteres, incluyendo al menos:<br>
+                                - 1 letra mayúscula (A-Z)<br>
+                                - 1 carácter especial (@!|./&)
+                            </div>
+                            <div class="password-strength mt-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-1 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="passwordStrengthBar" class="h-full bg-gray-400 w-0"></div>
+                                    </div>
+                                    <span id="passwordStrengthText" class="text-xs text-gray-500">Seguridad</span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="form-group relative">
@@ -305,16 +332,41 @@
         const delay = 300; // Retardo en ms para la búsqueda en tiempo real
 
         // Funciones del modal
-        function abrirModal() {
-            document.getElementById('usuarioModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
+        function abrirModal(esEdicion = false, documento = '') {
+        const modal = document.getElementById('usuarioModal');
+        const tituloModal = document.getElementById('modalTitle');
+        const botonSubmit = document.getElementById('submitButton');
+        
+        if (esEdicion) {
+            tituloModal.textContent = 'Editar Administrador';
+            botonSubmit.textContent = 'Actualizar';
+            document.getElementById('passwordFields').style.display = 'none';
+            document.getElementById('inputPassword').required = false;
+            document.getElementById('inputConfirmPassword').required = false;
+            document.getElementById('inputDocumentoLogin').readOnly = true;
+            
+            // Cargar datos del usuario a editar
+            cargarUsuarioParaEditar(documento);
+        } else {
+            tituloModal.textContent = 'Nuevo Administrador';
+            botonSubmit.textContent = 'Crear';
+            document.getElementById('passwordFields').style.display = 'block';
+            document.getElementById('inputPassword').required = true;
+            document.getElementById('inputConfirmPassword').required = true;
+            document.getElementById('inputDocumentoLogin').readOnly = false;
+            document.getElementById('usuarioForm').reset();
         }
+        
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
 
-        function cerrarModal() {
-            document.getElementById('usuarioModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            resetForm();
-        }
+    // Función para cerrar el modal
+    function cerrarModal() {
+        document.getElementById('usuarioModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        clearErrors();
+    }
 
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
@@ -344,10 +396,15 @@
             
             // Limpiar errores
             clearErrors();
+            
+            // Resetear indicador de fortaleza
+            document.getElementById('passwordStrengthBar').style.width = '0%';
+            document.getElementById('passwordStrengthBar').className = 'h-full bg-gray-400';
+            document.getElementById('passwordStrengthText').textContent = 'Seguridad';
         }
 
         function clearErrors() {
-            document.querySelectorAll('.error-message').forEach(el => {
+            document.querySelectorAll('[id$="Error"]').forEach(el => {
                 el.textContent = '';
             });
         }
@@ -372,89 +429,145 @@
             this.value = this.value.replace(/[^A-Za-záéíóúÁÉÍÓÚñÑ\s]/g, '');
         });
 
+        // Validación de contraseña en tiempo real
+document.getElementById('inputPassword').addEventListener('input', function() {
+    const password = this.value;
+    const strengthBar = document.getElementById('passwordStrengthBar');
+    const strengthText = document.getElementById('passwordStrengthText');
+    
+    // Calcular fortaleza basada en criterios
+    let strength = 0;
+    
+    // Longitud mínima (1 punto si tiene al menos 1 carácter)
+    if (password.length > 0) strength = 1; // Cambio importante aquí
+    
+    // Mayúscula (solo suma si ya tiene algo)
+    if (password.length > 0 && /[A-Z]/.test(password)) strength += 1;
+    
+    // Carácter especial (solo suma si ya tiene algo)
+    if (password.length > 0 && /[@!|./&]/.test(password)) strength += 1;
+    
+    // Número (solo suma si ya tiene algo)
+    if (password.length > 0 && /[0-9]/.test(password)) strength += 1;
+    
+    // Longitud adecuada (12+ caracteres)
+    if (password.length >= 12) strength += 1;
+    
+    // Asegurarnos de que strength no sea 0 si hay algo escrito
+    if (password.length > 0 && strength === 0) strength = 1;
+    
+    // Actualizar barra y texto
+    let widthPercentage = 0;
+    let colorClass = 'bg-gray-400';
+    let text = 'Seguridad';
+    
+    if (password.length === 0) {
+        widthPercentage = 0;
+        colorClass = 'bg-gray-400';
+        text = 'Seguridad';
+    } else if (strength <= 1) {
+        widthPercentage = 25;
+        colorClass = 'bg-red-500';
+        text = 'Muy débil';
+    } else if (strength === 2) {
+        widthPercentage = 50;
+        colorClass = 'bg-yellow-500';
+        text = 'Débil';
+    } else if (strength === 3) {
+        widthPercentage = 75;
+        colorClass = 'bg-blue-500';
+        text = 'Moderada';
+    } else {
+        widthPercentage = 100;
+        colorClass = 'bg-green-500';
+        text = 'Fuerte';
+    }
+    
+    strengthBar.style.width = `${widthPercentage}%`;
+    strengthBar.className = `h-full ${colorClass} transition-all duration-300`;
+    strengthText.textContent = text;
+});
+
         // Funciones para mostrar/ocultar filtros
-        document.getElementById('btnMostrarFiltros').addEventListener('click', function() {
-            const filtros = document.getElementById('filtrosContainer');
-            const icono = this.querySelector('i');
-            
-            // Alternar visibilidad
-            filtros.classList.toggle('hidden');
-            
-            // Cambiar ícono y estilo del botón
-            if (filtros.classList.contains('hidden')) {
-                this.classList.remove('bg-blue-600');
-                this.classList.add('bg-blue-500');
-                icono.classList.remove('fa-times');
-                icono.classList.add('fa-filter');
-            } else {
-                this.classList.remove('bg-blue-500');
-                this.classList.add('bg-blue-600');
-                icono.classList.remove('fa-filter');
-                icono.classList.add('fa-times');
+document.getElementById('btnMostrarFiltros').addEventListener('click', function() {
+    const filtros = document.getElementById('filtrosContainer');
+    const icono = this.querySelector('i');
+    
+    filtros.classList.toggle('hidden');
+    
+    if (filtros.classList.contains('hidden')) {
+        this.classList.remove('bg-blue-600');
+        this.classList.add('bg-blue-500');
+        icono.classList.remove('fa-times');
+        icono.classList.add('fa-filter');
+        
+        // Limpiar los campos de filtro cuando se ocultan
+        document.getElementById('filtroDocumento').value = '';
+        document.getElementById('filtroNombre').value = '';
+        document.getElementById('filtroCorreo').value = '';
+        document.getElementById('filtroTelefono').value = '';
+        document.getElementById('filtroEstado').value = '';
+        
+        // Aplicar filtros (que ahora están vacíos) para mostrar todos los registros
+        aplicarFiltros();
+    } else {
+        this.classList.remove('bg-blue-500');
+        this.classList.add('bg-blue-600');
+        icono.classList.remove('fa-filter');
+        icono.classList.add('fa-times');
+    }
+});
+
+        // Funciones de filtrado
+async function aplicarFiltros() {
+    try {
+        const filtros = {
+            documento: document.getElementById('filtroDocumento').value,
+            nombre: document.getElementById('filtroNombre').value,
+            correo: document.getElementById('filtroCorreo').value,
+            telefono: document.getElementById('filtroTelefono').value,
+            estado: document.getElementById('filtroEstado').value
+        };
+
+        // Mostrar carga
+        const tbody = document.getElementById('tablaCuerpo');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</td></tr>';
+
+        // Construir URL con parámetros
+        const params = new URLSearchParams();
+        for (const key in filtros) {
+            if (filtros[key]) {
+                params.append(key, filtros[key]);
+            }
+        }
+
+        // Hacer la petición AJAX
+        const response = await fetch(`/usuarios/?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
 
-        // Funciones de filtrado
-        async function aplicarFiltros() {
-            try {
-                // Obtener valores de los filtros
-                const filtros = {
-                    documento: document.getElementById('filtroDocumento').value,
-                    nombre: document.getElementById('filtroNombre').value,
-                    correo: document.getElementById('filtroCorreo').value,
-                    telefono: document.getElementById('filtroTelefono').value,
-                    estado: document.getElementById('filtroEstado').value
-                };
-
-                // Mostrar carga
-                const tbody = document.getElementById('tablaCuerpo');
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Buscando usuarios...</td></tr>';
-
-                // Construir URL con parámetros
-                const params = new URLSearchParams();
-                for (const key in filtros) {
-                    if (filtros[key]) {
-                        params.append(key, filtros[key]);
-                    }
-                }
-
-                // Hacer la petición AJAX
-                const response = await fetch(`/usuarios/?${params.toString()}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-
-                // Verificar si la respuesta es exitosa
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => null);
-                    throw new Error(errorData?.error || `Error HTTP: ${response.status}`);
-                }
-
-                // Procesar la respuesta
-                const data = await response.json();
-                
-                if (!data.administradores) {
-                    throw new Error('Formato de respuesta inesperado');
-                }
-
-                // Actualizar la tabla
-                actualizarTabla(data.administradores);
-                
-            } catch (error) {
-                console.error('Error en aplicarFiltros:', error);
-                
-                // Mostrar mensaje de error en la tabla
-                document.getElementById('tablaCuerpo').innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-red-500">
-                            Error: ${error.message}
-                        </td>
-                    </tr>
-                `;
-            }
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
         }
+
+        const data = await response.json();
+        actualizarTabla(data.administradores);
+        
+    } catch (error) {
+        console.error('Error en aplicarFiltros:', error);
+        document.getElementById('tablaCuerpo').innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-4 text-red-500">
+                    Error: ${error.message}
+                </td>
+            </tr>
+        `;
+    }
+}
+
 
 
         function actualizarTabla(administradores) {
@@ -510,44 +623,18 @@
         }
 
         // Limpiar filtros
-        document.getElementById('btnLimpiarFiltros').addEventListener('click', async function() {
-            // Limpiar los campos de filtro
-            document.getElementById('filtroDocumento').value = '';
-            document.getElementById('filtroNombre').value = '';
-            document.getElementById('filtroCorreo').value = '';
-            document.getElementById('filtroTelefono').value = '';
-            document.getElementById('filtroEstado').value = '';
-            
-            // Mostrar carga
-            document.querySelector('tbody').innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Cargando todos los usuarios...</td></tr>';
-            
-            try {
-                // Hacer una nueva petición sin filtros
-                const response = await fetch('/usuarios/', {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Error al cargar usuarios');
-                }
-                
-                const data = await response.json();
-                actualizarTabla(data.administradores);
-                
-            } catch (error) {
-                console.error('Error al limpiar filtros:', error);
-                document.querySelector('tbody').innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-red-500">
-                            Error al cargar usuarios: ${error.message}
-                        </td>
-                    </tr>
-                `;
-            }
-        });
+// Limpiar filtros
+document.getElementById('btnLimpiarFiltros').addEventListener('click', function() {
+    // Limpiar los campos de filtro
+    document.getElementById('filtroDocumento').value = '';
+    document.getElementById('filtroNombre').value = '';
+    document.getElementById('filtroCorreo').value = '';
+    document.getElementById('filtroTelefono').value = '';
+    document.getElementById('filtroEstado').value = '';
+    
+    // Aplicar filtros vacíos
+    aplicarFiltros();
+});
 
         // Event listeners para filtros en tiempo real
         document.getElementById('filtroDocumento').addEventListener('input', function() {
@@ -978,8 +1065,7 @@ async function enviarFormulario() {
             // Botón nuevo usuario
             document.getElementById('btnNuevoUsuario').addEventListener('click', function(e) {
                 e.preventDefault();
-                resetForm();
-                abrirModal();
+                abrirModal(false);
             });
 
             // Inicializar event listeners
@@ -1045,3 +1131,4 @@ document.querySelectorAll('#sidebar a').forEach(link => {
     </script>
 </body>
 </html>
+{% endif %}
